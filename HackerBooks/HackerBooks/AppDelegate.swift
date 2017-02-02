@@ -9,7 +9,7 @@
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDelegate {
 
     var window: UIWindow?
     
@@ -20,6 +20,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let url = "https://t.co/K9ziV0z3SJ"
             var json = try loadFromUrlRemote(urlName: url )
             //print(json)
+            
+            //Creo un array de objetos tipo Book
+            var books = [Book]()
+            for dict in json{  //json es un array de diccionarios (personajes)
+                do{
+                    let book = try decode(book: dict)
+                    books.append(book)
+                    print(books)
+                }catch{
+                    print("Error al procesar \(dict)")
+                }
+            }
         }
         catch{
             fatalError("ERROR")

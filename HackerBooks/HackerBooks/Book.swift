@@ -12,27 +12,47 @@ import UIKit
 class Book {
     
     //MARK: - Stored properties
-    let title : String?
-    let authors : [String]? //[String]?
-    let tags : [Tag]?    //[Tag]?
-    let photo: UIImage
-    let urlPdf : URL
+    let title : String
+    let authors : [String]
+    var tags : Tags
+    let photo: AsyncData
+    let pdf : AsyncData
     var isFavorite : Bool
     
+    /*var tags : Tags{
+        return _tags
+    }
+    
+    var title : String{
+        return _title
+    }*/
+    
     //MARK: - Initializations
-    init(title: String?,authors: [String]?,tags: [Tag]?,photo: UIImage,urlPdf: URL) {
+    init(title: String,authors: [String],tags: Tags,photo: AsyncData,pdf: AsyncData) {
         
         self.title = title
         self.authors = authors
-        self.tags = [Tag]
+        self.tags = tags
         self.photo = photo
-        self.urlPdf = urlPdf
+        self.pdf = pdf
         self.isFavorite = false
+    }
+    
+    
+    //MARK: - Utils
+    func formattedListOfAuthors() -> String{
+        
+        return authors.sorted().joined(separator: ", ")
+        
+    }
+    
+    func formattedListOfTags() -> String{
+        return tags.sorted().map{$0.name}.joined(separator: ", ")
     }
 
     //MARK: - Proxies
     func proxyForEquality() -> String {
-        return "\(title)\(authors)\(tags)\(photo.hashValue)\(urlPdf)"
+        return "\(title)\(authors)"
     }
     func proxyForComparison() -> String {
         return proxyForEquality()

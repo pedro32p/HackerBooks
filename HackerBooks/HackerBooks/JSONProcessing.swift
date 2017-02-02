@@ -14,26 +14,22 @@ typealias JSONObject = AnyObject
 typealias JSONDictionary  = [String : JSONObject]
 typealias JSONArray = [JSONDictionary]
 
-/*
- {
- "authors": "Scott Chacon, Ben Straub",
- "image_url": "http://hackershelf.com/media/cache/b4/24/b42409de128aa7f1c9abbbfa549914de.jpg",
- "pdf_url": "https://progit2.s3.amazonaws.com/en/2015-03-06-439c2/progit-en.376.pdf",
- "tags": "version control, git",
- "title": "Pro Git"
- }
- */
-
 //MARK: - Decodification
 
 //TRANSFORMAMOS EL JSONDICTIONARY EN UN OBJETO BOOK
 func decode(book json: JSONDictionary) throws -> Book {
     
     //Validamos el diccionario
-    guard let photo = json["image_url"] as? String, let urlImg = URL(string: photo), let imageData = try? Data(contentsOf: urlImg), let image = UIImage(data: imageData) else{
+    /*guard let photo = json["image_url"] as? String, let urlImg = URL(string: photo), let imageData = try? Data(contentsOf: urlImg), let image = UIImage(data: imageData) else{
+        //HA OCURRIDO UN ERROR
+        throw BooksError.wrongURLFormatForJSONResource
+    }*/
+    
+    guard let photo = json["image_url"] as? String, let urlImg = URL(string: photo) else {
         //HA OCURRIDO UN ERROR
         throw BooksError.wrongURLFormatForJSONResource
     }
+    
     guard let urlPdf = json["pdf_url"] as? String, let urlPDF = URL(string: urlPdf) else{
         //HA OCURRIDO UN ERROR
         throw BooksError.wrongURLFormatForJSONResource
@@ -47,13 +43,22 @@ func decode(book json: JSONDictionary) throws -> Book {
     }
     
     let arrayAutores = transformToArray(cadenaAtransformar: authors)
-    let arrayTags = transformToArray(cadenaAtransformar: tags)
+    let arrayTags = Tags(transformToArray(cadenaAtransformar: tags).map({Tag(name: $0)}))
+    
+    let mainBundle = Bundle.main
+    
+    let defaultImage = mainBundle.url(forResource: "emptyImage", withExtension: "png")!
+    let defaultPdf = mainBundle.url(forResource: "emptyPDF", withExtension: "pdf")!
+    
+    // AsyncData
+    let image = AsyncData(url: urlImg, defaultData: try! Data(contentsOf: defaultImage))
+    let pdf = AsyncData(url: urlPDF, defaultData: try! Data(contentsOf: defaultPdf))
     
     if let title = json["title"] as? String {
         
         //Todo ha salido bien
         //Creo el Book
-        return Book(title: title, authors: arrayAutores, tags: arrayTags, photo: image, urlPdf: urlPDF)
+        return Book(title: title, authors: arrayAutores, tags: arrayTags, photo: image, pdf: pdf)
     }
     else{
         throw BooksError.nilJSONObject
@@ -70,7 +75,7 @@ func decode(book json: JSONDictionary?) throws -> Book {
     
 }
 
-//Función decode que descodifica un array de StarWarsCharacter: recibimos el array y a cada elemento le encasquetamos un decode de opcional
+//Función decode que descodifica un array de Books: recibimos el array y a cada elemento le encasquetamos un decode de opcional
 
 func decode (bookArray json: [JSONDictionary]) throws -> [Book] {
     
@@ -87,18 +92,8 @@ func transformToArray(cadenaAtransformar: String) -> [String]{
     return arraySinEspacios
 }
 
-/* 
- {
- "authors": "Scott Chacon, Ben Straub",
- "image_url": "http://hackershelf.com/media/cache/b4/24/b42409de128aa7f1c9abbbfa549914de.jpg",
- "pdf_url": "https://progit2.s3.amazonaws.com/en/2015-03-06-439c2/progit-en.376.pdf",
- "tags": "version control, git",
- "title": "Pro Git"
- }
-*/
 
 //MARK: - Loading
-
 //función que nos devuelve el fichero JSON
 func loadFromUrlRemote(urlName url: String) throws -> JSONArray {
     if let url = URL(string: url),
